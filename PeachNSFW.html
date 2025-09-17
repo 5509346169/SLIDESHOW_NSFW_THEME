@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Siren Image Showcase</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(to bottom, #000000, #1a1a1a, #333333);
+            color: #ffffff;
+            font-family: 'Georgia', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: auto;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .showcase-container {
+            position: relative;
+            width: 90%;
+            max-width: 1000px;
+            border: 3px solid #ff69b4;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.7);
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .slides-container {
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        button {
+            background: #ff69b4;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            min-width: 90px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: background 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        button:hover {
+            background: #ff1493;
+        }
+
+        input[type="number"] {
+            width: 100px;
+            padding: 8px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #ff69b4;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="showcase-container" id="showcaseContainer">
+            <div class="slides-container" id="slides"></div>
+        </div>
+        <div class="controls">
+            <button id="playPause">Play</button>
+            <label for="delay">Delay (ms):</label>
+            <input type="number" id="delay" value="3000" min="500" max="10000">
+            <button id="prev">Prev</button>
+            <button id="next">Next</button>
+            <button id="copyUrl">Copy URL</button>
+        </div>
+    </div>
+
+    <script>
+        const images = [
+            'https://img1.pixhost.to/images/8759/641241720_44_20250617_173049.jpg',
+            'https://img1.pixhost.to/images/8759/641241721_45_20250617_173049.jpg',
+            'https://img1.pixhost.to/images/8759/641241724_46_20250617_173049.jpg',
+            'https://img1.pixhost.to/images/8759/641241728_47_20250617_173049.jpg'
+        ];
+        let currentIndex = 0;
+        let slideshowInterval;
+        let isPlaying = false;
+        let delay = 3000;
+
+        const slidesContainer = document.getElementById('slides');
+        const playPauseBtn = document.getElementById('playPause');
+        const delayInput = document.getElementById('delay');
+        const prevBtn = document.getElementById('prev');
+        const nextBtn = document.getElementById('next');
+        const copyUrlBtn = document.getElementById('copyUrl');
+        const showcaseContainer = document.getElementById('showcaseContainer');
+
+        function loadImages() {
+            slidesContainer.innerHTML = '';
+            let maxWidth = 0;
+            let maxHeight = 0;
+
+            const promises = images.map((url, index) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.src = url;
+                    img.onload = () => {
+                        maxWidth = Math.max(maxWidth, img.naturalWidth);
+                        maxHeight = Math.max(maxHeight, img.naturalHeight);
+                        resolve();
+                    };
+                    img.onerror = () => resolve();
+                });
+            });
+
+            Promise.all(promises).then(() => {
+                const containerWidth = Math.min(maxWidth, 1000);
+                const containerHeight = Math.min(maxHeight, 600);
+                showcaseContainer.style.width = `${containerWidth + 40}px`;
+                slidesContainer.style.height = `${containerHeight}px`;
+
+                images.forEach((url, index) => {
+                    const slide = document.createElement('div');
+                    slide.className = 'slide';
+                    const img = document.createElement('img');
+                    img.src = url;
+                    slide.appendChild(img);
+                    if (index === 0) slide.classList.add('active');
+                    slidesContainer.appendChild(slide);
+                });
+                showSlide(currentIndex);
+            });
+        }
+
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+        }
+
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % images.length;
+            showSlide(currentIndex);
+        }
+
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            showSlide(currentIndex);
+        }
+
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            playPauseBtn.textContent = isPlaying ? 'Pause' : 'Play';
+            if (isPlaying) {
+                delay = parseInt(delayInput.value) || 3000;
+                slideshowInterval = setInterval(nextSlide, delay);
+            } else {
+                clearInterval(slideshowInterval);
+            }
+        }
+
+        function copyCurrentUrl() {
+            const currentSlide = document.querySelector('.slide.active img');
+            if (currentSlide) {
+                navigator.clipboard.writeText(currentSlide.src).then(() => {
+                    alert('URL copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy URL:', err);
+                });
+            }
+        }
+
+        delayInput.addEventListener('input', () => {
+            if (isPlaying) {
+                clearInterval(slideshowInterval);
+                delay = parseInt(delayInput.value) || 3000;
+                slideshowInterval = setInterval(nextSlide, delay);
+            }
+        });
+
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        nextBtn.addEventListener('click', nextSlide);
+        prevBtn.addEventListener('click', prevSlide);
+        copyUrlBtn.addEventListener('click', copyCurrentUrl);
+
+        // Load images on page load
+        loadImages();
+    </script>
+</body>
+</html>

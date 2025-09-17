@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Siren Album Showcase</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(to bottom, #000000, #1a1a1a, #333333);
+            color: #ffffff;
+            font-family: 'Georgia', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: auto;
+            position: relative;
+        }
+
+        .album-showcase-container {
+            width: 90%;
+            max-width: 1200px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 3px solid #ff69b4;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.7);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            position: relative;
+        }
+
+        .album-card {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: 300px;
+        }
+
+        .album-card:hover {
+            transform: scale(1.05);
+        }
+
+        .album-card a {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none;
+            color: #fff;
+            padding: 10px;
+            pointer-events: auto;
+        }
+
+        .album-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            display: block;
+            background: rgba(0, 0, 0, 0.3);
+            filter: blur(0px);
+            image-rendering: auto;
+            transition: filter 0.5s ease;
+        }
+
+        .album-card.nsfw-on img {
+            filter: blur(3px);
+            image-rendering: pixelated;
+            animation: pixelateEffect 1s infinite alternate;
+        }
+
+        @keyframes pixelateEffect {
+            0% { filter: blur(3px) contrast(100%); }
+            50% { filter: blur(5px) contrast(150%); }
+            100% { filter: blur(3px) contrast(100%); }
+        }
+
+        .album-info {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .album-info h3 {
+            margin: 0;
+            font-size: 1.1em;
+            color: #ff69b4;
+        }
+
+        .album-info p {
+            margin: 5px 0 0;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        .nsfw-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff69b4;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: background 0.3s;
+            z-index: 10;
+        }
+
+        .nsfw-toggle:hover {
+            background: #ff1493;
+        }
+
+        .nsfw-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 5;
+        }
+
+        .nsfw-overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="album-showcase-container" id="albumShowcase">
+        <div class="nsfw-overlay"></div>
+    </div>
+    <button class="nsfw-toggle" id="nsfwToggle">NSFW: OFF</button>
+
+    <script>
+        const albums = [
+            { id: 1, thumbnail: 'https://img1.pixhost.to/images/8758/641241568_15_20250617_160004.jpg', name: 'JinxNSFW', date: 'Sep 17, 2025 10:40 AM +07' },
+            { id: 2, thumbnail: 'https://img1.pixhost.to/images/8759/641242011_49_20250618_163559.jpg', name: 'OverLordNSFW', date: 'Sep 17, 2025 10:40 AM +07' },
+            { id: 3, thumbnail: 'https://img1.pixhost.to/images/8759/641242597_386_20250621_091527.jpg', name: 'GAWRDRAGON_NSFW', date: 'Sep 17, 2025 10:40 AM +07' },
+            { id: 4, thumbnail: 'https://img1.pixhost.to/images/8759/641241720_44_20250617_173049.jpg', name: 'PeachNSFW', date: 'Sep 17, 2025 10:40 AM +07' },
+            { id: 5, thumbnail: 'https://img1.pixhost.to/images/8759/641242389_358_20250619_171027.jpg', name: 'PonyTailsNSFW', date: 'Sep 17, 2025 10:40 AM +07' },
+            { id: 6, thumbnail: 'https://img1.pixhost.to/images/8759/641243060_671_20250621_141104.jpg', name: 'VisualNovel_NSFW', date: 'Sep 17, 2025 10:40 AM +07' },
+            { id: 7, thumbnail: 'https://img1.pixhost.to/images/8757/641229356_83_20250618_172002.jpg', name: 'showcase', date: 'Sep 17, 2025 10:40 AM +07'}
+        ];
+
+        const container = document.getElementById('albumShowcase');
+        const nsfwToggle = document.getElementById('nsfwToggle');
+        const nsfwOverlay = container.querySelector('.nsfw-overlay');
+
+        albums.forEach(album => {
+            const card = document.createElement('div');
+            card.className = 'album-card';
+            card.innerHTML = `
+                <a href="${album.name}.html?album=${album.id}">
+                    <img src="${album.thumbnail}" alt="${album.name} Thumbnail">
+                    <div class="album-info">
+                        <h3>${album.name}</h3>
+                        <p>${album.date}</p>
+                    </div>
+                </a>
+            `;
+            container.appendChild(card);
+        });
+
+        let isNsfwOn = false;
+        nsfwToggle.addEventListener('click', () => {
+            isNsfwOn = !isNsfwOn;
+            nsfwToggle.textContent = `NSFW: ${isNsfwOn ? 'ON' : 'OFF'}`;
+            nsfwOverlay.classList.toggle('active', isNsfwOn);
+            const cards = container.getElementsByClassName('album-card');
+            for (let card of cards) {
+                card.classList.toggle('nsfw-on', isNsfwOn);
+            }
+        });
+    </script>
+</body>
+</html>
